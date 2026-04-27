@@ -17,7 +17,7 @@ export const signup = asyncHandler(async (req, res, next) => {
   // Check if phone already exists
   const existing = await Account.findOne({ phone });
   if (existing) {
-    return next(new ApiError("Phone number already exists", 400));
+    return next(new ApiError("Phone number already exists", 404));
   }
 
   const account = await Account.create({
