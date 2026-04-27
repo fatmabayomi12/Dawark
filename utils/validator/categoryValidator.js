@@ -1,6 +1,8 @@
 import { check } from "express-validator";
 import { validatorMiddelware } from "../../middelware/validatorMiddelware.js";
 import slugify from "slugify";
+
+
 export const createCategoryValidator = [
   check("name")
     .notEmpty()

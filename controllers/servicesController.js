@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 import Service from "../models/servicesModel.js";
 
 // @desc   Create a new service

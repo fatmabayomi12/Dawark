@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler"
 import WeekDays from "../models/weekDaysModel.js"
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 
 // @desc   Create or update business schedule
 // @route  POST /api/v1/weekdays

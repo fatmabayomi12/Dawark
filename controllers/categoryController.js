@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 import Category from "../models/categoryModel.js";
 
 // @desc   Create a new category
