@@ -1,36 +1,35 @@
 import express from "express";
 
-import {
-  createServiceValidator,
-  getServiceValidator,
-  updateServiceValidator,
-  deleteServiceValidator,
-} from "../utils/validator/serviceValidator.js";
+import { protect } from "../controllers/authController.js";
 
 import {
-  createService,
-  getAllServices,
-  getService,
-  getServicesByBusiness,
-  updateService,
+  setupBusiness,
+  addService,
+  getServices,
+  getServiceById,
   deleteService,
+  addProvider,
+  deleteProvider,
+  finishSetup,
+  getProfile,
 } from "../controllers/servicesController.js";
 
 const serviceRouter = express.Router();
 
-serviceRouter
-  .route("/")
-  .post(createServiceValidator, createService)
-  .get(getAllServices);
+serviceRouter.use(protect);
 
-serviceRouter
-  .route("/business/:businessId")
-  .get(getServicesByBusiness);
+serviceRouter.post("/business-info", setupBusiness);
 
-serviceRouter
-  .route("/:id")
-  .get(getServiceValidator, getService)
-  .put(updateServiceValidator, updateService)
-  .delete(deleteServiceValidator, deleteService);
+serviceRouter.route("/").post(addService).get(getServices);
+
+serviceRouter.route("/:id").get(getServiceById).delete(deleteService);
+
+serviceRouter.post("/providers", addProvider);
+
+serviceRouter.delete("/providers/:id", deleteProvider);
+
+serviceRouter.post("/finish", finishSetup);
+
+serviceRouter.get("/profile", getProfile);
 
 export default serviceRouter;

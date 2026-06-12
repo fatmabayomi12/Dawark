@@ -7,7 +7,7 @@ import {
   deleteSchedule,
 } from "../controllers/weekDaysController.js";
 
-import { protect } from "../controllers/acountController.js";
+import { protect } from "../controllers/authController.js";
 
 const weekDayRouter = express.Router();
 
