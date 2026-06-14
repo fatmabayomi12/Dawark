@@ -196,4 +196,124 @@ export const login = async (req, res) => {
   }
 };
 
+// @desc   Edit Account (phone, email, password)
+// @route  PATCH /api/v1/settings/account
+// @access Private
+export const editAccount = async (req, res) => {
+  try {
+    const { phone_number, email, current_password, new_password } = req.body;
 
+    const user = await User.findById(req.user._id);
+
+    if (phone_number) user.phone_number = phone_number;
+    if (email) user.email = email;
+
+    if (new_password) {
+      if (!current_password) {
+        return res.status(400).json({ error: "Current password is required" });
+      }
+      const isMatch = await user.comparePassword(current_password);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+      user.password = new_password;
+    }
+
+    await user.save();
+
+    res.status(200).json({ message: "Account updated", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc   Edit Business Info
+// @route  PATCH /api/v1/settings/business
+// @access Private (Owner)
+export const editBusinessInfo = async (req, res) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Only owners can access this" });
+    }
+
+    const { business_name, address } = req.body;
+
+    const profile = await OwnerProfile.findOne({ user: req.user._id });
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    if (business_name) profile.business_name = business_name;
+    if (address) profile.address = address;
+
+    await profile.save();
+
+    res.status(200).json({ message: "Business info updated", profile });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc   Edit Service
+// @route  PATCH /api/v1/settings/services/:id
+// @access Private (Owner)
+export const editService = async (req, res) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Only owners can access this" });
+    }
+
+    const service = await Service.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
+    });
+
+    if (!service) {
+      return res.status(404).json({ error: "Service not found" });
+    }
+
+    const { name, duration_minutes, price } = req.body;
+
+    if (name) service.name = name;
+    if (duration_minutes) service.duration_minutes = duration_minutes;
+    if (price) service.price = price;
+
+    await service.save();
+
+    res.status(200).json({ message: "Service updated", service });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc   Edit Provider
+// @route  PATCH /api/v1/settings/providers/:id
+// @access Private (Owner)
+export const editProvider = async (req, res) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Only owners can access this" });
+    }
+
+    const provider = await ServiceProvider.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
+    });
+
+    if (!provider) {
+      return res.status(404).json({ error: "Provider not found" });
+    }
+
+    const { name, title, services } = req.body;
+
+    if (name) provider.name = name;
+    if (title) provider.title = title;
+    if (services) provider.services = services;
+
+    await provider.save();
+
+    res.status(200).json({ message: "Provider updated", provider });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
