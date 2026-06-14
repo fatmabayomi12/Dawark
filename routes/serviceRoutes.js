@@ -22,14 +22,14 @@ serviceRouter.post("/business-info", setupBusiness);
 
 serviceRouter.route("/").post(addService).get(getServices);
 
-serviceRouter.route("/:id").get(getServiceById).delete(deleteService);
-
-serviceRouter.post("/providers", addProvider);
-
-serviceRouter.delete("/providers/:id", deleteProvider);
-
 serviceRouter.post("/finish", finishSetup);
 
 serviceRouter.get("/profile", getProfile);
+
+serviceRouter.post("/providers", addProvider);
+
+serviceRouter.route("/:id").get(getServiceById).delete(deleteService);
+
+serviceRouter.delete("/providers/:id", deleteProvider);
 
 export default serviceRouter;
