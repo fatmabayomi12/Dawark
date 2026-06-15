@@ -1,8 +1,16 @@
 // controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
+import asyncHandler from "express-async-handler"
+import { createHash } from "crypto";
 import User from '../models/userModel.js';
 import Business from '../models/businessModel.js';
+import Service from '../models/serviceModel.js';
+import ServiceProvider from '../models/serviceProviderModel.js';
 import OwnerProfile from '../models/ownerProfileModel.js';
+import ApiError from "../utils/apiError.js"
+import { resetPasswordTemplate } from "../utils/emailTemplate.js";
+import { sendEmail } from "../utils/sendEmail.js";
+
 
 // Make Sure the user is authenticated before accessing protected routes
 export const protect = async (req, res, next) => {
@@ -317,3 +325,79 @@ export const editProvider = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// @desc   Forget password
+// @route  POST /api/v1/auth/forget-password
+// @access Public
+export const forgetPassword = asyncHandler(async (req, res, next) => {
+  console.log("forgetPassword route called");
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new ApiError("User not found", 404));
+  }
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedCode = createHash("sha256").update(resetCode).digest("hex");
+  user.passwordResetCode = hashedCode;
+  user.passwordResetExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+  await user.save();
+  const message = resetPasswordTemplate(user.email, resetCode);
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Your password reset code (valid for 10 minutes)",
+      message,
+    });
+  } catch (err) {
+    console.log("Email sending error:", err);
+    user.passwordResetCode = undefined;
+    user.passwordResetExpire = undefined;
+    user.passwordResetVerified = undefined;
+    await user.save();
+    return next(new ApiError("There was an error sending the email", 500));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "Reset code sent to email, please check your inbox",
+  });
+});
+
+// @desc   Verify reset code
+// @route  POST /api/v1/auth/verify-reset-code
+// @access Public
+export const verifyResetCode = asyncHandler(async (req, res, next) => {
+  const hashedCode = createHash("sha256").update(req.body.resetCode).digest("hex");
+  const user = await User.findOne({
+    passwordResetCode: hashedCode,
+    passwordResetExpire: { $gt: Date.now() },
+  });
+  if (!user) {
+    return next(new ApiError("Invalid or expired reset code", 400));
+  }
+  user.passwordResetVerified = true;
+  await user.save();
+  res.status(200).json({
+    status: "success",
+    message: "Reset code verified, you can now reset your password",
+  });
+});
+
+// @desc   Reset password
+// @route  POST /api/v1/auth/reset-password
+// @access Public
+export const resetPassword = asyncHandler(async (req, res, next) => {
+  const { email, newPassword } = req.body;
+  const user = await User.findOne({email});
+  if (!user) {
+    return next(new ApiError("User not found", 404));
+  }
+  user.password = newPassword;
+  user.passwordResetCode = undefined;
+  user.passwordResetExpire = undefined;
+  user.passwordResetVerified = undefined;
+  await user.save();
+  res.status(200).json({
+    status: "success",
+    message:
+      "Password reset successful, you can now log in with your new password",
+  });
+});
