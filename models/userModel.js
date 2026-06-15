@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema(
       enum: ["registered", "role_chosen", "business_chosen", "completed"],
       default: "registered",
     },
+    passwordResetCode: String,
+    passwordResetExpire: Date,
+    passwordResetVerified: Boolean,
   },
   { timestamps: true },
 );
